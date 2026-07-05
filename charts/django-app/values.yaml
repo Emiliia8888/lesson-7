@@ -1,9 +1,9 @@
 replicaCount: 2
 
 image:
-  repository: "034255117140.dkr.ecr.eu-central-1.amazonaws.com/dev-django-app"
+  repository: 034255117140.dkr.ecr.eu-central-1.amazonaws.com/dev-django-app
   tag: "latest"
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 service:
   type: LoadBalancer
@@ -11,13 +11,17 @@ service:
   targetPort: 8000
 
 config:
-  dbHost: "django-db-endpoint"
+  dbHost: "dev-django-db-rds.ctskymysi6zv.eu-central-1.rds.amazonaws.com"
   dbName: "django_db"
-  dbUser: "postgres"
+  dbUser: "django_user"
+  dbPort: "5432"
   djangoDebug: "False"
-  allowedHosts: "*"
 
-autoscaling:
+secrets:
+  dbPassword: "SuperSecurePassword123"
+  secretKey: "django-insecure-random-secret-key-value"
+
+hpa:
   enabled: true
   minReplicas: 2
   maxReplicas: 6
