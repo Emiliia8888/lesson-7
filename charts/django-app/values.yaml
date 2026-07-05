@@ -1,0 +1,24 @@
+replicaCount: 2
+
+image:
+  repository: "034255117140.dkr.ecr.eu-central-1.amazonaws.com/dev-django-app"
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 8000
+
+config:
+  dbHost: "django-db-endpoint"
+  dbName: "django_db"
+  dbUser: "postgres"
+  djangoDebug: "False"
+  allowedHosts: "*"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
