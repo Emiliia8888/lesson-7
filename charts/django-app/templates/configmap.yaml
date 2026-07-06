@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-configmap
+  name: {{ include "django-app.fullname" . }}-config
 data:
   DJANGO_DEBUG: {{ .Values.django.debug | quote }}
   ALLOWED_HOSTS: {{ .Values.django.allowedHosts | quote }}
