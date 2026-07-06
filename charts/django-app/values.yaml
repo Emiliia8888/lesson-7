@@ -1,28 +1,18 @@
-replicaCount: 2
+replicaCount: 1
 
 image:
-  repository: 034255117140.dkr.ecr.eu-central-1.amazonaws.com/dev-django-app
+  repository: django-app
   tag: "latest"
-  pullPolicy: Always
-
-service:
-  type: LoadBalancer
-  port: 80
-  targetPort: 8000
+  pullPolicy: IfNotPresent
 
 config:
-  dbHost: "dev-django-db-rds.ctskymysi6zv.eu-central-1.rds.amazonaws.com"
   dbName: "django_db"
-  dbUser: "django_user"
+  dbUser: "postgres"
   dbPort: "5432"
-  djangoDebug: "False"
+  dbHost: "rds-postgres-address-from-terraform"
+  djangoDebug: "True"
+  allowedHosts: "*"
 
-secrets:
-  dbPassword: "SuperSecurePassword123"
-  secretKey: "django-insecure-random-secret-key-value"
-
-hpa:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 6
-  targetCPUUtilizationPercentage: 70
+secret:
+  dbPassword: "SuperSecretPassword123"
+  secretKey: "django-insecure-yoursupersecretproductionkey"

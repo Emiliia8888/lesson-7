@@ -12,27 +12,27 @@ provider "aws" {
   region = var.region
 }
 
-# 1. Модуль Мережі (VPC)
+
 module "vpc" {
   source      = "./modules/vpc"
   environment = var.environment
 }
 
-# 2. Модуль Репозиторію для Docker-образів (ECR)
+
 module "ecr" {
   source          = "./modules/ecr"
   environment     = var.environment
   repository_name = "django-app"
 }
 
-# 3. Модуль Кластера Kubernetes (EKS)
+
 module "eks" {
   source      = "./modules/eks"
   environment = var.environment
   subnet_ids  = module.vpc.private_subnets
 }
 
-# 4. Модуль Бази Даних (RDS / Aurora)
+
 module "rds" {
   source      = "./modules/rds"
   environment = var.environment
@@ -47,3 +47,11 @@ module "rds" {
   username = "postgres"
   password = "SecurePassword2026!"
 }
+
+
+#module "s3_backend" {
+#  source = "./modules/s3-backend"
+#
+#  bucket_name = "emiliia-terraform-state-lesson-5"
+#  table_name  = "terraform-lock-table"
+#}
