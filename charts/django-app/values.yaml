@@ -1,18 +1,37 @@
-replicaCount: 1
+replicaCount: 2
 
 image:
-  repository: django-app
+  repository: "ТВІЙ_ECR_REPOSITORY_URL"
   tag: "latest"
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
-config:
-  dbName: "django_db"
-  dbUser: "postgres"
-  dbPort: "5432"
-  dbHost: "rds-postgres-address-from-terraform"
-  djangoDebug: "True"
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+django:
+  secretKey: "django-insecure-yoursupersecretproductionkey"
+  debug: "True"
   allowedHosts: "*"
 
-secret:
-  dbPassword: "SuperSecretPassword123"
-  secretKey: "django-insecure-yoursupersecretproductionkey"
+db:
+  name: "django_db"
+  user: "postgres"
+  password: "SuperSecretPassword123"
+  host: "rds-postgres-address-from-terraform"
+  port: "5432"
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 8000
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 80

@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "django-app.fullname" . }}-config
+  name: {{ .Release.Name }}-configmap
 data:
-  DB_NAME: {{ .Values.config.dbName | quote }}
-  DB_USER: {{ .Values.config.dbUser | quote }}
-  DB_HOST: {{ .Values.config.dbHost | quote }}
-  DB_PORT: {{ .Values.config.dbPort | quote }}
-  DJANGO_DEBUG: {{ .Values.config.djangoDebug | quote }}
-  ALLOWED_HOSTS: {{ .Values.config.allowedHosts | quote }}
+  DJANGO_DEBUG: {{ .Values.django.debug | quote }}
+  ALLOWED_HOSTS: {{ .Values.django.allowedHosts | quote }}
+  DB_NAME: {{ .Values.db.name | quote }}
+  DB_USER: {{ .Values.db.user | quote }}
+  DB_HOST: {{ .Values.db.host | quote }}
+  DB_PORT: {{ .Values.db.port | quote }}

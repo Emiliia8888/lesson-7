@@ -49,9 +49,9 @@ module "rds" {
 }
 
 
-#module "s3_backend" {
-#  source = "./modules/s3-backend"
-#
-#  bucket_name = "emiliia-terraform-state-lesson-5"
-#  table_name  = "terraform-lock-table"
-#}
+module "s3_backend" {
+  source = "./modules/s3-backend"
+
+  bucket_name = "emiliia-terraform-state-lesson-5"
+  table_name  = "terraform-lock-table"
+}
