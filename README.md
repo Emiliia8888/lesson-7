@@ -1,40 +1,82 @@
-# Lesson 7: Автоматизація деплою Django в Kubernetes (EKS) через Terraform та Helm
+# Lesson 7: Terraform + EKS + ECR + Helm
 
-Цей проєкт є логічним продовженням Теми 5. Інфраструктура розгорнута за допомогою Terraform/OpenTofu, а деплой застосунку автоматизовано через інструмент Helm. Враховано вимоги безпеки (Secrets), інтеграцію з PostgreSQL (AWS RDS) та автоматичне масштабування (HPA).
+## Опис
 
-## 🛠 Використовувані інструменти та технології
+У цьому проєкті за допомогою Terraform створено інфраструктуру AWS, що включає Kubernetes-кластер (Amazon EKS) та репозиторій Amazon ECR. Django-застосунок контейнеризовано, завантажено в ECR і розгорнуто в Kubernetes за допомогою Helm.
 
-* **Terraform / OpenTofu** — підготовка EKS кластера, мережі (VPC), AWS RDS та ECR репозиторію.
-* **AWS S3 & DynamoDB (Backend)** — віддалене збереження стейту інфраструктури та блокування сесій (перенесено з Теми 5).
-* **AWS CLI** — автентифікація в ECR та оновлення локального конфігу `kubeconfig`.
-* **Docker** — збірка контейнеризованого Django-застосунку з підтримкою PostgreSQL (архітектура `linux/amd64`).
-* **Kubernetes (EKS)** — цільова хмарна платформа для запуску застосунку.
-* **Helm v3** — управління релізами та шаблонізація Kubernetes-маніфестів.
+## Використані технології
 
----
+* Terraform
+* Amazon EKS
+* Amazon ECR
+* AWS RDS PostgreSQL
+* Docker
+* Kubernetes
+* Helm
+* AWS CLI
 
-## 📐 Опис нових модулів та архітектурних виправлень
+## Розгортання інфраструктури
 
-### 1. Інфраструктурний рівень (Terraform / OpenTofu)
-* **S3 Backend (`backend.tf`)**: Модуль та конфігурація перенесені з Теми 5 для збереження стану `terraform.tfstate` у захищеному S3-бакеті `emiliia-terraform-state-lesson-5` із блокуванням через DynamoDB (`terraform-lock-table`).
-* **Кластер EKS (`eks.tf`)**:
-  * Налаштовано автоматичне масштабування робочих нод (Node Group) відповідно до вимог HPA: `min_size = 2`, `max_size = 6`, `desired_size = 2`.
-  * Додано параметри `endpoint_private_access = true` та `endpoint_public_access = true` у `vpc_config`.
-  * Інтегровано блок `access_config` для безпечного керування доступами до API кластера через сучасні механізми AWS провайдера v6.
-* **Database**: Реалізовано перехід з SQLite на керовану базу даних PostgreSQL на базі AWS RDS.
-
-### 2. Рівень деплою (Helm-чарт `charts/django-app`)
-* **`values.yaml`**: Винесено всі змінні конфігурації. Налаштовано масштабування подів від 2 до 6 при навантаженні на CPU > 70%.
-* **`deployment.yaml`**: Реалізовано підключення конфігів. Додано та вирівняно блоки `livenessProbe` та `readinessProbe` (шлях `/health/` або `/`) для коректного відстеження життєвого циклу подів під час роботи HPA.
-* **`configmap.yaml`**: Відповідає за некритичні змінні оточення додатка (включаючи `DB_HOST`, `DB_NAME`, `DB_USER` та порт `DB_PORT`).
-* **`secret.yaml`**: Забезпечує безпечну передачу чутливих даних (`DB_PASSWORD`, `SECRET_KEY`) за допомогою кодування в Base64, повністю виключаючи хардкод у репозиторії та файлі `settings.py`.
-
----
-
-## 🚀 Інструкція із запуску та керування релізами
-
-### 1. Ініціалізація та розгортання інфраструктури
-Переконайтеся, що ви перебуваєте в робочій директорії проєкту, після чого виконайте:
 ```bash
 terraform init
+terraform plan
 terraform apply -auto-approve
+```
+
+## Підключення до EKS
+
+```bash
+aws eks update-kubeconfig --region eu-central-1 --name dev-eks-cluster
+```
+
+## Авторизація в ECR
+
+```bash
+aws ecr get-login-password --region eu-central-1 \
+| docker login --username AWS --password-stdin \
+034255117140.dkr.ecr.eu-central-1.amazonaws.com
+```
+
+## Завантаження Docker-образу
+
+```bash
+docker tag django-app:latest \
+034255117140.dkr.ecr.eu-central-1.amazonaws.com/django-app:latest
+
+docker push \
+034255117140.dkr.ecr.eu-central-1.amazonaws.com/django-app:latest
+```
+
+## Розгортання Helm-чарта
+
+```bash
+cd charts/django-app
+
+helm lint .
+
+helm install django-app .
+
+# або оновлення
+helm upgrade --install django-app .
+```
+
+## Перевірка
+
+```bash
+kubectl get nodes
+kubectl get pods
+kubectl get svc
+kubectl get hpa
+```
+
+## Реалізовано
+
+* Terraform-модуль EKS
+* Terraform-модуль ECR
+* Helm Deployment
+* Helm Service (LoadBalancer)
+* Helm ConfigMap
+* Helm Secret
+* Horizontal Pod Autoscaler (2–6 реплік, 70% CPU)
+* Підключення ConfigMap через `envFrom`
+* Використання Docker-образу з Amazon ECR

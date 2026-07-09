@@ -1,46 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-app
 spec:
-  containers:
-    - name: {{ .Chart.Name }}
-      image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-      env:
-        - name: DJANGO_DEBUG
-          valueFrom:
-            configMapKeyRef:
-              name: {{ include "django-app.fullname" . }}-config
-              key: DJANGO_DEBUG
-        - name: ALLOWED_HOSTS
-          valueFrom:
-            configMapKeyRef:
-              name: {{ include "django-app.fullname" . }}-config
-              key: ALLOWED_HOSTS
-        - name: DB_NAME
-          valueFrom:
-            configMapKeyRef:
-              name: {{ include "django-app.fullname" . }}-config
-              key: DB_NAME
-        - name: DB_USER
-          valueFrom:
-            configMapKeyRef:
-              name: {{ include "django-app.fullname" . }}-config
-              key: DB_USER
-        - name: DB_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: {{ include "django-app.fullname" . }}-config
-              key: DB_HOST
-        - name: DB_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: {{ include "django-app.fullname" . }}-config
-              key: DB_PORT
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: django-app
+  template:
+    metadata:
+      labels:
+        app: django-app
+    spec:
+      containers:
+        - name: django-app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
 
-        - name: SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: {{ include "django-app.fullname" . }}-secret
-              key: SECRET_KEY
-        - name: DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ include "django-app.fullname" . }}-secret
-              key: DB_PASSWORD
+          envFrom:
+            - configMapRef:
+                name: django-app-config
+
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: django-app-secret
+                  key: SECRET_KEY
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: django-app-secret
+                  key: DB_PASSWORD
+
+          ports:
+            - containerPort: 8000
+
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
